@@ -1,0 +1,316 @@
+use DB127;
+
+/*
+DROP TABLE ConsistOf;
+DROP TABLE Orderr;
+DROP TABLE Payment;
+DROP TABLE RegCust;
+DROP TABLE CustPhone;
+DROP TABLE Customer;
+DROP TABLE Supply;
+DROP TABLE SupPhone;
+DROP TABLE Supplier;
+DROP TABLE GeoArea;
+DROP TABLE Product;
+DROP TABLE Category;
+*/
+
+CREATE TABLE Category (
+	CatCode INT IDENTITY(1,1) NOT NULL,
+	Descr VARCHAR(255),
+	CONSTRAINT Category_PK PRIMARY KEY(CatCode),
+	);
+
+
+CREATE TABLE Product (
+	PrCode VARCHAR(15) NOT NULL,
+	Descr VARCHAR(255),
+	Name VARCHAR(60) NOT NULL,
+	Stock INT,
+	Price MONEY,
+	CatCode INT NOT NULL,
+	CONSTRAINT Product_PK PRIMARY KEY(PrCode),
+	CONSTRAINT Product_FK FOREIGN KEY(CatCode) REFERENCES Category,
+	CONSTRAINT Product_C CHECK(Stock>=0 AND Price>0)
+	);
+
+
+
+CREATE TABLE GeoArea (
+	GCode INT IDENTITY(1,1) NOT NULL,
+	Name VARCHAR(60) NOT NULL,
+	Population INT,
+	CONSTRAINT GeoArea_PK PRIMARY KEY(GCode),
+	);
+	
+	
+CREATE TABLE Supplier (
+	SupCode INT IDENTITY(1,1) NOT NULL,
+	Afm CHAR(9) NOT NULL,
+	Name VARCHAR(60) NOT NULL,
+	City VARCHAR(40),
+	Zip VARCHAR(10),
+	Street VARCHAR(40),
+	Num VARCHAR(7),
+	GCode INT NOT NULL,
+	CONSTRAINT Supplier_PK PRIMARY KEY(SupCode),
+	CONSTRAINT Supplier_FK FOREIGN KEY(GCode) REFERENCES GeoArea,
+	CONSTRAINT Supplier_C CHECK(LEN(Afm)=9),
+	);
+
+
+
+
+CREATE TABLE SupPhone (
+	SupCode INT NOT NULL,
+	Phone CHAR(14) NOT NULL,
+	CONSTRAINT SupPhone_PK PRIMARY KEY(SupCode, Phone),
+	CONSTRAINT SupPhone_FK FOREIGN KEY(SupCode) REFERENCES Supplier,
+	);
+
+
+CREATE TABLE Supply (
+	ShipCode VARCHAR(15) NOT NULL,
+	Prod VARCHAR(60) NOT NULL,
+	FrmSup VARCHAR(60),
+	Date DATE,
+	Amount INT,
+	PrCode VARCHAR(15) NOT NULL,
+	SupCode INT NOT NULL,
+	CONSTRAINT Supply_PK PRIMARY KEY(ShipCode),
+	CONSTRAINT Supply_FK FOREIGN KEY(PrCode) REFERENCES Product,
+	CONSTRAINT Supply_FK2 FOREIGN KEY(SupCode) REFERENCES Supplier,
+	CONSTRAINT Supply_C CHECK(Amount>0),
+	);
+
+
+
+
+
+CREATE TABLE Customer (
+	CustCode INT IDENTITY(1,1) NOT NULL,
+	Afm CHAR(9) NOT NULL,
+	CompName VARCHAR(60) NOT NULL,
+	City VARCHAR(40),
+	Zip VARCHAR(10),
+	Street VARCHAR(40),
+	Num VARCHAR(7),
+	GCode INT NOT NULL,
+	CONSTRAINT Customer_PK PRIMARY KEY(CustCode),
+	CONSTRAINT Customer_FK FOREIGN KEY(GCode) REFERENCES GeoArea,
+	CONSTRAINT Customer_C CHECK(LEN(Afm)=9),
+	);
+
+ALTER TABLE Customer 
+drop CONSTRAINT  Customer_FK;
+ 
+ALTER TABLE Customer
+ADD CONSTRAINT Customer_FK FOREIGN KEY(GCode) REFERENCES GeoArea
+(GCode) ON DELETE CASCADE 
+
+
+
+CREATE TABLE CustPhone (
+	CustCode INT NOT NULL,
+	Phone CHAR(14) NOT NULL,
+	CONSTRAINT CustPhone_PK PRIMARY KEY(CustCode, Phone),
+	CONSTRAINT CustPhone_FK FOREIGN KEY(CustCode) REFERENCES Customer,
+	);
+
+
+
+
+CREATE TABLE RegCust (
+	CustCode INT NOT NULL,
+	Limit MONEY,
+	Balance MONEY,
+	CONSTRAINT RegCust_PK PRIMARY KEY(CustCode),
+	CONSTRAINT RegCust_FK FOREIGN KEY(CustCode) REFERENCES Customer,
+	CONSTRAINT RegCust_C CHECK(Limit>=0 AND Balance>=0),
+	);
+	
+	
+CREATE TABLE Payment (
+	CustCode INT NOT NULL,
+	PayDate DATE NOT NULL,
+	PayAmnt MONEY,
+	FrmCust VARCHAR(60),
+	CONSTRAINT Payment_PK PRIMARY KEY(CustCode, PayDate),
+	CONSTRAINT Payment_FK FOREIGN KEY(CustCode) REFERENCES RegCust,
+	CONSTRAINT Payment_C CHECK(PayAmnt>0),
+	);
+	
+
+	
+	
+	
+CREATE TABLE Orderr (
+	OrdCode INT IDENTITY(1,1) NOT NULL,
+	ShipDate DATE,
+	OrdDate DATE NOT NULL,
+	CustCode INT NOT NULL,
+	CONSTRAINT Orderr_PK PRIMARY KEY(OrdCode),
+	CONSTRAINT Orderr_FK FOREIGN KEY(CustCode) REFERENCES Customer,
+	);
+
+
+
+
+CREATE TABLE ConsistOf (
+	OrdCode INT NOT NULL,
+	PrCode VARCHAR(15) NOT NULL,
+	Amount INT NOT NULL,
+	CONSTRAINT ConsistOf_PK PRIMARY KEY(OrdCode, PrCode),
+	CONSTRAINT ConsistOf_FK FOREIGN KEY(OrdCode) REFERENCES Orderr,
+	CONSTRAINT ConsistOf_FK2 FOREIGN KEY(PrCode) REFERENCES Product,
+	CONSTRAINT ConsistOf_C CHECK(Amount>0),
+	);
+
+
+
+--H allagi tis vasis gia to 2o Paradoteo---------------------------------------------------------------------------------------------------------
+
+
+use DB127;
+
+/*
+DROP TABLE CustPhone;
+DROP TABLE SupPhone;
+*/
+
+
+ALTER TABLE Customer
+ADD Phone CHAR(14);
+
+
+ALTER TABLE Supplier
+ADD Phone CHAR(14);
+
+
+
+UPDATE Customer
+SET Phone = '00302134245635'
+WHERE CustCode = 1;
+
+UPDATE Customer
+SET Phone = '00302128645325'
+WHERE CustCode = 2;
+
+UPDATE Customer
+SET Phone = '00107144215679'
+WHERE CustCode = 3;
+
+UPDATE Customer
+SET Phone = '00302107715679'
+WHERE CustCode = 4;
+
+UPDATE Supplier
+SET Phone = '00302105236785'
+WHERE SupCode = 1;
+
+UPDATE Supplier
+SET Phone = '00303106542876'
+WHERE SupCode = 2;
+
+UPDATE Supplier
+SET Phone = '00304327655577'
+WHERE SupCode = 3;
+
+
+
+ALTER TABLE Customer
+ALTER COLUMN Phone CHAR(14) NOT NULL;
+
+ALTER TABLE Supplier
+ALTER COLUMN Phone CHAR(14) NOT NULL;
+
+
+
+------------------------------------allages  basis gia 3o Paradoteo--------------------------------------------------------------------------
+
+
+USE DB127;
+
+		
+ALTER TABLE Product 
+drop CONSTRAINT Product_FK;
+ 
+ALTER TABLE Product
+ADD CONSTRAINT Product_FK FOREIGN KEY(CatCode) REFERENCES Category
+(CatCode) ON DELETE CASCADE
+
+
+
+
+ALTER TABLE Supplier 
+drop CONSTRAINT Supplier_FK;
+ 
+ALTER TABLE Supplier
+ADD CONSTRAINT Supplier_FK FOREIGN KEY(GCode) REFERENCES GeoArea
+(GCode) ON DELETE CASCADE
+
+
+
+ALTER TABLE Supply 
+drop CONSTRAINT Supply_FK;
+ 
+ALTER TABLE Supply
+ADD CONSTRAINT Supply_FK FOREIGN KEY(PrCode) REFERENCES Product
+(PrCode) ON DELETE CASCADE 
+
+
+ 
+
+
+ ALTER TABLE Customer 
+drop CONSTRAINT  Customer_FK;
+ 
+ALTER TABLE Customer
+ADD CONSTRAINT Customer_FK FOREIGN KEY(GCode) REFERENCES GeoArea
+(GCode) ON DELETE CASCADE 
+
+
+
+ALTER TABLE RegCust
+drop CONSTRAINT  RegCust_FK;
+ 
+ALTER TABLE RegCust
+ADD CONSTRAINT RegCust_FK FOREIGN KEY(CustCode) REFERENCES Customer
+(CustCode) ON DELETE CASCADE 
+
+
+
+
+ALTER TABLE Payment
+drop CONSTRAINT  Payment_FK;
+ 
+ALTER TABLE Payment
+ADD CONSTRAINT Payment_FK FOREIGN KEY(CustCode) REFERENCES RegCust
+(CustCode) ON DELETE CASCADE
+
+
+
+ALTER TABLE Orderr
+drop CONSTRAINT  Orderr_FK;
+ 
+ALTER TABLE Orderr
+ADD CONSTRAINT  Orderr_FK FOREIGN KEY(CustCode) REFERENCES Customer
+(CustCode) ON DELETE CASCADE 
+
+
+
+ALTER TABLE ConsistOf
+drop CONSTRAINT ConsistOf_FK;
+ 
+ALTER TABLE ConsistOf
+ADD CONSTRAINT ConsistOf_FK FOREIGN KEY(OrdCode) REFERENCES Orderr
+(OrdCode) ON DELETE CASCADE 
+
+
+
+ALTER TABLE ConsistOf
+drop CONSTRAINT ConsistOf_FK2;
+ 
+ALTER TABLE ConsistOf
+ADD CONSTRAINT ConsistOf_FK2 FOREIGN KEY(PrCode) REFERENCES Product
+(PrCode) ON DELETE CASCADE  
